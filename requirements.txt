@@ -1,0 +1,6 @@
+pywa[fastapi]
+google-generativeai
+python-dotenv
+uvicorn
+fastapi
+requests  # For downloading images if needed
