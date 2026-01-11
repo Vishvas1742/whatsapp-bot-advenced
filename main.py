@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from pywa import WhatsApp
-from pywa.types import Message, MediaMessage
+from pywa.types import Message
 from pywa.filters import text as text_filter, media as media_filter
 import google.generativeai as genai
 import requests
