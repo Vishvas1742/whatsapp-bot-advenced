@@ -20,8 +20,14 @@ WEBHOOK_VERIFY_TOKEN = os.getenv("WEBHOOK_VERIFY_TOKEN")
 APP_ID = os.getenv("APP_ID")
 APP_SECRET = os.getenv("APP_SECRET")
 
-if not all([GEMINI_API_KEY, WHATSAPP_PHONE_ID, WHATSAPP_TOKEN, WEBHOOK_VERIFY_TOKEN]):
-    raise ValueError("Missing required environment variables!")
+def validate_env():
+    if not all([
+        GEMINI_API_KEY,
+        WHATSAPP_PHONE_ID,
+        WHATSAPP_TOKEN,
+        WEBHOOK_VERIFY_TOKEN
+    ]):
+        raise ValueError("Missing required environment variables!")
 
 # Gemini setup (using multimodal model for image analysis)
 genai.configure(api_key=GEMINI_API_KEY)
