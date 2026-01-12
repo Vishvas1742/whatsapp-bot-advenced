@@ -1,5 +1,4 @@
 
-
 import os
 from pywa.types import Message
 from pywa import WhatsApp
@@ -112,7 +111,7 @@ def handle_text_message(client: WhatsApp, msg: Message):
 
 # Handler for media messages (e.g., photos for proof)
 @wa.on_message(filters.image)
-def handle_media_message(client: WhatsApp, msg: MediaMessage):
+def handle_media_message(client: WhatsApp, msg: Message):
 
     if not msg.media.image:
         msg.reply_text("माफ़ करें, मैं अभी केवल तस्वीरें ही स्वीकार कर सकता हूँ।")
