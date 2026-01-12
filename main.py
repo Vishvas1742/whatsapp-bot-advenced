@@ -94,7 +94,7 @@ def get_gemini_reply(user_wa_id: str, user_message: str, image_path: str = None)
     return bot_reply
 
 # Handler for text messages
-@wa.on_message(text_filter.Text)
+@wa.on_message(filters=text_filter)
 def handle_text_message(client: WhatsApp, msg: Message):
     user_wa_id = msg.from_user.wa_id
     user_text = msg.text
@@ -107,32 +107,32 @@ def handle_text_message(client: WhatsApp, msg: Message):
     print(f"Sent to {user_wa_id}: {bot_response[:70]}...")
 
 # Handler for media messages (e.g., photos for proof)
-@wa.on_message(media_filter.Media)
-async def handle_media_message(client: WhatsApp, msg: MediaMessage):
-    if not msg.media.image:  # Only handle images for now
-        await msg.reply_text("क्षमा करें, मैं अभी केवल तस्वीरें हैंडल कर सकता हूँ। कृपया समस्या की तस्वीर भेजें।")
+@wa.on_message(filters=media_filter)
+def handle_media_message(client: WhatsApp, msg: MediaMessage):
+
+    if not msg.media.image:
+        msg.reply_text("माफ़ करें, मैं अभी केवल तस्वीरें ही स्वीकार कर सकता हूँ।")
         return
 
     user_wa_id = msg.from_user.wa_id
-
     print(f"Received image from {user_wa_id}")
 
-    # Download the image temporarily
-    with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as tmp_file:
-        response = requests.get(msg.media.url, headers={"Authorization": f"Bearer {WHATSAPP_TOKEN}"})
+    # Download image
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".jpg") as tmp_file:
+        response = requests.get(
+            msg.media.url,
+            headers={"Authorization": f"Bearer {WHATSAPP_TOKEN}"}
+        )
         tmp_file.write(response.content)
         image_path = tmp_file.name
 
-    # Generate reply with image analysis
-    analysis_message = "ग्राहक ने समस्या की तस्वीर भेजी है। कृपया एनालाइज करें और रिस्पॉन्स दें।"
+    analysis_message = "ग्राहक ने यह तस्वीर भेजी है, कृपया जांच करें और उचित उत्तर दें।"
     bot_response = get_gemini_reply(user_wa_id, analysis_message, image_path)
 
-    # Clean up temporary file
     os.unlink(image_path)
 
-    await msg.reply_text(bot_response)
-
-    print(f"Sent analysis to {user_wa_id}: {bot_response[:70]}...")
+    msg.reply_text(bot_response)
+    print(f"Sent analysis to {user_wa_id}")
 
 # Server startup
 if __name__ == "__main__":
