@@ -1,9 +1,8 @@
 import os
 from dotenv import load_dotenv
 from fastapi import FastAPI
-from pywa import WhatsApp
+from pywa import WhatsApp, filters
 from pywa.types import Message
-from pywa.filters import text as text_filter, media as media_filter
 import google.generativeai as genai
 import requests
 from typing import Dict, List
@@ -94,7 +93,7 @@ def get_gemini_reply(user_wa_id: str, user_message: str, image_path: str = None)
     return bot_reply
 
 # Handler for text messages
-@wa.on_message(text_filter.Text)
+@wa.on_message(filters.text)
 async def handle_text_message(client: WhatsApp, msg: Message):
     user_wa_id = msg.from_user.wa_id
     user_text = msg.text
