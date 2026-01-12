@@ -1,8 +1,7 @@
 import os
 from dotenv import load_dotenv
 from fastapi import FastAPI
-from pywa import WhatsApp, filters
-from pywa.types import Message
+from pywa import filters
 import google.generativeai as genai
 import requests
 from typing import Dict, List
@@ -94,7 +93,7 @@ def get_gemini_reply(user_wa_id: str, user_message: str, image_path: str = None)
     return bot_reply
 
 # Handler for text messages
-@wa.on_message(filters=media_filter)
+@wa.on_message(filters.text)
 def handle_text_message(client: WhatsApp, msg: Message):
     user_wa_id = msg.from_user.wa_id
     user_text = msg.text
@@ -107,7 +106,7 @@ def handle_text_message(client: WhatsApp, msg: Message):
     print(f"Sent to {user_wa_id}: {bot_response[:70]}...")
 
 # Handler for media messages (e.g., photos for proof)
-@wa.on_message(filters=media_filter)
+@wa.on_message(filters.image)
 def handle_media_message(client: WhatsApp, msg: MediaMessage):
 
     if not msg.media.image:
