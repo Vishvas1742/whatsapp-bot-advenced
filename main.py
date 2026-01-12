@@ -94,7 +94,7 @@ def get_gemini_reply(user_wa_id: str, user_message: str, image_path: str = None)
     return bot_reply
 
 # Handler for text messages
-@wa.on_message(filters=text_filter)
+@wa.on_message(filters=media_filter)
 def handle_text_message(client: WhatsApp, msg: Message):
     user_wa_id = msg.from_user.wa_id
     user_text = msg.text
