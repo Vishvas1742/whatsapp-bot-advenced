@@ -4,12 +4,24 @@ from pywa.types import Message
 from pywa import WhatsApp
 from pywa import filters
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, HTTPException, Query
 from pywa import filters
 import google.generativeai as genai
 import requests
 from typing import Dict, List
 import tempfile
+
+app = FastAPI()
+
+@app.get("/webhook")
+def verify_webhook(
+    hub_mode: str = Query(None, alias="hub.mode"),
+    hub_verify_token: str = Query(None, alias="hub.verify_token"),
+    hub_challenge: int = Query(None, alias="hub.challenge"),
+):
+    if hub_mode == "subscribe" and hub_verify_token == os.getenv("VERIFY_TOKEN"):
+        return hub_challenge
+    raise HTTPException(status_code=403, detail="Verification failed")
 
 # Load environment variables
 load_dotenv()
