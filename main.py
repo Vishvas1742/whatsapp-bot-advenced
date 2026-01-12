@@ -1,7 +1,6 @@
 
 import os
 from pywa import WhatsApp
-from pywa.types import Message, MediaMessage
 from pywa import filters
 from dotenv import load_dotenv
 from fastapi import FastAPI
