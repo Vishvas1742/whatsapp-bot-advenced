@@ -94,15 +94,15 @@ def get_gemini_reply(user_wa_id: str, user_message: str, image_path: str = None)
     return bot_reply
 
 # Handler for text messages
-@wa.on_message(filters.text)
-async def handle_text_message(client: WhatsApp, msg: Message):
+@wa.on_message(text_filter.Text)
+def handle_text_message(client: WhatsApp, msg: Message):
     user_wa_id = msg.from_user.wa_id
     user_text = msg.text
 
     print(f"Received text from {user_wa_id}: {user_text}")
 
     bot_response = get_gemini_reply(user_wa_id, user_text)
-    await msg.reply_text(bot_response)
+    msg.reply_text(bot_response)
 
     print(f"Sent to {user_wa_id}: {bot_response[:70]}...")
 
