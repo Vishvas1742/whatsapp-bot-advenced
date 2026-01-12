@@ -17,8 +17,7 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 WHATSAPP_PHONE_ID = os.getenv("WHATSAPP_PHONE_ID")
 WHATSAPP_TOKEN = os.getenv("WHATSAPP_TOKEN")
 WEBHOOK_VERIFY_TOKEN = os.getenv("WEBHOOK_VERIFY_TOKEN")
-APP_ID = os.getenv("APP_ID")
-APP_SECRET = os.getenv("APP_SECRET")
+APP_ID = o
 
 def validate_env():
     if not all([
@@ -64,11 +63,7 @@ app = FastAPI()
 wa = WhatsApp(
     phone_id=WHATSAPP_PHONE_ID,
     token=WHATSAPP_TOKEN,
-    server=app,
-    callback_url="https://whatsapp-bot-advanced.onrender.com",  # Replace with your actual Render URL
-    verify_token=WEBHOOK_VERIFY_TOKEN,
-    app_id=APP_ID,
-    app_secret=APP_SECRET
+    
 )
 
 def get_gemini_reply(user_wa_id: str, user_message: str, image_path: str = None) -> str:
