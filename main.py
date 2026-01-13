@@ -76,9 +76,7 @@ app = FastAPI()
 # PyWa client
 wa = WhatsApp(
     token=WHATSAPP_TOKEN,
-    phone_id=PHONE_NUMBER_ID,
-    verify_token=VERIFY_TOKEN,
-    app=app   # 🔥 YE HI GAME CHANGER HAI
+    phone_id=PHONE_NUMBER_ID
 )
 
 def get_gemini_reply(user_wa_id: str, user_message: str, image_path: str = None) -> str:
