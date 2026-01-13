@@ -38,7 +38,7 @@ def validate_env():
         GEMINI_API_KEY,
         WHATSAPP_PHONE_ID,
         WHATSAPP_TOKEN,
-        WEBHOOK_VERIFY_TOKEN
+        VERIFY_TOKEN
     ]):
         raise ValueError("Missing required environment variables!")
 
@@ -79,9 +79,8 @@ wa = WhatsApp(
     token=WHATSAPP_TOKEN,
     server=app,                          # ← सबसे जरूरी: server=app (FastAPI ऐप पास करें)
     callback_url="https://whatsapp-bot-advanced.onrender.com/",  # ← अपना Render URL डालें (बिना / के अंत में)
-    verify_token=VERIFY_TOKEN,
-    app_id=APP_ID,                       # अगर आपके पास है तो डालें
-    app_secret=APP_SECRET                # अगर आपके पास है तो डालें
+    verify_token=VERIFY_TOKEN,                 
+                   
 )
 
 def get_gemini_reply(user_wa_id: str, user_message: str, image_path: str = None) -> str:
