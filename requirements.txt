@@ -1,6 +1,6 @@
-pywa[fastapi]
-google-generativeai
-python-dotenv
-uvicorn
-fastapi
-requests  # For downloading images if needed
+pywa[fastapi]>=2.0.0
+fastapi>=0.110.0
+uvicorn>=0.27.0
+requests>=2.31.0
+google-generativeai>=0.4.1
+python-dotenv>=1.0.1
