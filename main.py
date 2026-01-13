@@ -74,10 +74,14 @@ conversations: Dict[str, List[Dict[str, str]]] = {}
 app = FastAPI()
 
 # PyWa client
-wa = WhatsApp.from_fastapi(
-    app=app,
+wa = WhatsApp(
+    phone_id=WHATSAPP_PHONE_ID,
     token=WHATSAPP_TOKEN,
-    phone_id=PHONE_NUMBER_ID
+    server=app,                          # ← सबसे जरूरी: server=app (FastAPI ऐप पास करें)
+    callback_url="https://whatsapp-bot-advanced.onrender.com/",  # ← अपना Render URL डालें (बिना / के अंत में)
+    verify_token=VERIFY_TOKEN,
+    app_id=APP_ID,                       # अगर आपके पास है तो डालें
+    app_secret=APP_SECRET                # अगर आपके पास है तो डालें
 )
 
 def get_gemini_reply(user_wa_id: str, user_message: str, image_path: str = None) -> str:
