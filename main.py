@@ -77,8 +77,7 @@ app = FastAPI()
 wa = WhatsApp(
     phone_id=WHATSAPP_PHONE_ID,
     token=WHATSAPP_TOKEN,
-    server=app,                          # ← सबसे जरूरी: server=app (FastAPI ऐप पास करें)
-    callback_url="https://whatsapp-bot-advanced.onrender.com/",  # ← अपना Render URL डालें (बिना / के अंत में)
+    server=app,                          
     verify_token=VERIFY_TOKEN,                 
                    
 )
