@@ -74,7 +74,8 @@ conversations: Dict[str, List[Dict[str, str]]] = {}
 app = FastAPI()
 
 # PyWa client
-wa = WhatsApp(
+wa = WhatsApp.from_fastapi(
+    app=app,
     token=WHATSAPP_TOKEN,
     phone_id=PHONE_NUMBER_ID
 )
