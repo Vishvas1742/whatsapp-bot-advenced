@@ -44,7 +44,7 @@ def validate_env():
 
 # Gemini setup (using multimodal model for image analysis)
 genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel('gemini-1.5-flash')  # Multimodal-capable model
+model = genai.GenerativeModel('gemini-2.5-flash')  # सबसे अच्छा विकल्प – तेज़, multimodal, और उपलब्ध  # Multimodal-capable model
 
 # Advanced system prompt for professional return handling
 SYSTEM_PROMPT = """
