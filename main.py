@@ -80,7 +80,7 @@ def get_gemini_reply(user_wa_id: str, user_message: str, image_path: str = None)
     return bot_reply
 
 @wa.on_message(text)  # ← सिर्फ text लिखें, कोई .Text नहीं
-async def handle_text_message(client: WhatsApp, msg: Message):
+def handle_text_message(client: WhatsApp, msg: Message):
     """टेक्स्ट मैसेज हैंडलर"""
     user_wa_id = msg.from_user.wa_id
     user_text = msg.text.strip()
@@ -89,7 +89,7 @@ async def handle_text_message(client: WhatsApp, msg: Message):
 
     # Gemini से जवाब जनरेट
     bot_response = get_gemini_reply(user_wa_id, user_text)
-    await msg.reply_text(bot_response)
+    msg.reply_text(bot_response)
 
     # रिपोर्ट भेजने की शर्त (यहाँ आप आगे बेहतर कंडीशन बना सकते हैं)
     if "हाँ" in user_text or "confirm" in user_text.lower() or "भेज दो" in user_text:
@@ -101,16 +101,16 @@ async def handle_text_message(client: WhatsApp, msg: Message):
         )
 
         if OWNER_WHATSAPP_NUMBER:
-            await client.send_message(to=OWNER_WHATSAPP_NUMBER, text=report)
-            await msg.reply_text("आपका अनुरोध स्टोर मालिक को भेज दिया गया है। जल्द अपडेट मिलेगा।")
+            client.send_message(to=OWNER_WHATSAPP_NUMBER, text=report)
+            msg.reply_text("आपका अनुरोध स्टोर मालिक को भेज दिया गया है। जल्द अपडेट मिलेगा।")
         else:
             print("OWNER_WHATSAPP_NUMBER environment variable नहीं मिला")
 
 @wa.on_message(media)
-async def handle_media_message(client: WhatsApp, msg: Message):
+def handle_media_message(client: WhatsApp, msg: Message):
     """फोटो/मीडिया हैंडलर"""
     if not msg.media.image:
-        await msg.reply_text("क्षमा करें, मैं अभी केवल तस्वीरें हैंडल कर सकता हूँ।")
+        msg.reply_text("क्षमा करें, मैं अभी केवल तस्वीरें हैंडल कर सकता हूँ।")
         return
 
     user_wa_id = msg.from_user.wa_id
@@ -125,7 +125,7 @@ async def handle_media_message(client: WhatsApp, msg: Message):
     bot_response = get_gemini_reply(user_wa_id, analysis_message, image_path)
     os.unlink(image_path)
 
-    await msg.reply_text(bot_response)
+    msg.reply_text(bot_response)
 
 if __name__ == "__main__":
     import uvicorn
