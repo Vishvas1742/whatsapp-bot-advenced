@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from pywa import WhatsApp
 from pywa.types import Message
-from pywa.filters import text as text_filter, media as media_filter
+from pywa.filters import text, media
 import google.generativeai as genai
 import requests
 from typing import Dict, List
@@ -79,7 +79,7 @@ def get_gemini_reply(user_wa_id: str, user_message: str, image_path: str = None)
     conversations[user_wa_id].append({"role": "model", "parts": [bot_reply]})
     return bot_reply
 
-@wa.on_message(text_filter.Text)
+@wa.on_message(text)  # ← सिर्फ text लिखें, कोई .Text नहीं
 async def handle_text_message(client: WhatsApp, msg: Message):
     """टेक्स्ट मैसेज हैंडलर"""
     user_wa_id = msg.from_user.wa_id
@@ -106,7 +106,7 @@ async def handle_text_message(client: WhatsApp, msg: Message):
         else:
             print("OWNER_WHATSAPP_NUMBER environment variable नहीं मिला")
 
-@wa.on_message(media_filter.Media)
+@wa.on_message(media)
 async def handle_media_message(client: WhatsApp, msg: Message):
     """फोटो/मीडिया हैंडलर"""
     if not msg.media.image:
