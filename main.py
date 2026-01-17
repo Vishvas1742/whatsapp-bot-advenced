@@ -2,7 +2,7 @@ import os
 from dotenv import load_dotenv
 from fastapi import FastAPI
 from pywa import WhatsApp
-from pywa.types import Message, MediaMessage
+from pywa.types import Message
 from pywa.filters import text as text_filter, media as media_filter
 import google.generativeai as genai
 import requests
@@ -107,7 +107,7 @@ async def handle_text_message(client: WhatsApp, msg: Message):
             print("OWNER_WHATSAPP_NUMBER environment variable नहीं मिला")
 
 @wa.on_message(media_filter.Media)
-async def handle_media_message(client: WhatsApp, msg: MediaMessage):
+async def handle_media_message(client: WhatsApp, msg: Message):
     """फोटो/मीडिया हैंडलर"""
     if not msg.media.image:
         await msg.reply_text("क्षमा करें, मैं अभी केवल तस्वीरें हैंडल कर सकता हूँ।")
