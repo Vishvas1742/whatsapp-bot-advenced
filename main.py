@@ -16,13 +16,13 @@ load_dotenv()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 WHATSAPP_PHONE_ID = os.getenv("WHATSAPP_PHONE_ID")
 WHATSAPP_TOKEN = os.getenv("WHATSAPP_TOKEN")
-WEBHOOK_VERIFY_TOKEN = os.getenv("WEBHOOK_VERIFY_TOKEN")
+WEBHOOK_VERIFY_TOKEN = os.getenv("VERIFY_TOKEN")
 APP_ID = os.getenv("APP_ID")
 APP_SECRET = os.getenv("APP_SECRET")
 OWNER_WHATSAPP_NUMBER = os.getenv("OWNER_WHATSAPP_NUMBER")  # मालिक का WhatsApp नंबर (रिपोर्ट के लिए)
 
 # चेक करें कि जरूरी चर मौजूद हैं
-required_vars = ["GEMINI_API_KEY", "WHATSAPP_PHONE_ID", "WHATSAPP_TOKEN", "WEBHOOK_VERIFY_TOKEN"]
+required_vars = ["GEMINI_API_KEY", "WHATSAPP_PHONE_ID", "WHATSAPP_TOKEN", "VERIFY_TOKEN"]
 missing = [var for var in required_vars if not os.getenv(var)]
 if missing:
     raise ValueError(f"Missing environment variables: {', '.join(missing)}")
