@@ -115,12 +115,22 @@ def handle_text_message(client: WhatsApp, msg: Message):
     user_wa_id = msg.from_user.wa_id
     user_text = msg.text
 
-    print(f"Received text from {user_wa_id}: {user_text}")
-
+    # Gemini से जवाब जनरेट करें (पहले से है)
     bot_response = get_gemini_reply(user_wa_id, user_text)
     msg.reply_text(bot_response)
 
-    print(f"Sent to {user_wa_id}: {bot_response[:70]}...")
+    # अगर बातचीत पूरी हो गई (उदाहरण: यूजर ने "हाँ" कहा या अंतिम जवाब दिया)
+    # तो रिपोर्ट तैयार करें और मालिक को भेजें
+    if "हाँ" in user_text or "confirm" in user_text.lower():  # यह कंडीशन बाद में बेहतर बनाएंगे
+        report = f"नया रिटर्न अनुरोध:\n" \
+                 f"ग्राहक: {user_wa_id}\n" \
+                 f"समस्या: {user_text}\n" \
+                 f"सुझाव: रिफंड या रिप्लेसमेंट"
+
+        owner_number = os.getenv("OWNER_WHATSAPP_NUMBER")
+        if owner_number:
+             client.send_message(to=owner_number, text=report)
+            msg.reply_text("आपका अनुरोध स्टोर मालिक को भेज दिया गया है। जल्द अपडेट मिलेगा।")
 
 # Handler for media messages (e.g., photos for proof)
 @wa.on_message(filters.image)
