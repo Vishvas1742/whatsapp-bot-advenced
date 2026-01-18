@@ -79,32 +79,51 @@ def get_gemini_reply(user_wa_id: str, user_message: str, image_path: str = None)
     conversations[user_wa_id].append({"role": "model", "parts": [bot_reply]})
     return bot_reply
 
-@wa.on_message(text)  # ← सिर्फ text लिखें, कोई .Text नहीं
+@wa.on_message(text)
 def handle_text_message(client: WhatsApp, msg: Message):
-    """टेक्स्ट मैसेज हैंडलर"""
     user_wa_id = msg.from_user.wa_id
     user_text = msg.text.strip()
 
     print(f"Received text from {user_wa_id}: {user_text}")
 
-    # Gemini से जवाब जनरेट
+    # पहले से मौजूद Gemini जवाब जनरेटर
     bot_response = get_gemini_reply(user_wa_id, user_text)
     msg.reply_text(bot_response)
 
-    # रिपोर्ट भेजने की शर्त (यहाँ आप आगे बेहतर कंडीशन बना सकते हैं)
+    # रिपोर्ट भेजने की शर्त (पहले से है)
     if "हाँ" in user_text or "confirm" in user_text.lower() or "भेज दो" in user_text:
         report = (
             f"नया रिटर्न अनुरोध:\n"
             f"ग्राहक नंबर: {user_wa_id}\n"
-            f"समस्या/जवाब: {user_text}\n"
-            f"सुझाव: जांच के बाद अप्रूव या रिजेक्ट करें"
+            f"समस्या: {user_text}\n"
+            f"सुझाव: जांच के बाद अप्रूव या रिजेक्ट करें\n"
+            f"अप्रूव करने के लिए: APPROVE {user_wa_id} लिखें\n"
+            f"रिजेक्ट करने के लिए: REJECT {user_wa_id} लिखें"
         )
 
         if OWNER_WHATSAPP_NUMBER:
             client.send_message(to=OWNER_WHATSAPP_NUMBER, text=report)
             msg.reply_text("आपका अनुरोध स्टोर मालिक को भेज दिया गया है। जल्द अपडेट मिलेगा।")
-        else:
-            print("OWNER_WHATSAPP_NUMBER environment variable नहीं मिला")
+
+    # मालिक से अप्रूवल कमांड चेक करें (यह नया हिस्सा है)
+    if user_wa_id == OWNER_WHATSAPP_NUMBER.replace("+", ""):  # मालिक का मैसेज पहचानें
+        text_upper = user_text.upper()
+        if text_upper.startswith("APPROVE"):
+            # अप्रूवल हुआ → ग्राहक को कन्फर्मेशन भेजें
+            customer_id = user_text.split()[-1]  # उदाहरण: APPROVE 91789... → customer_id = 91789...
+            client.send_message(
+                to=customer_id,
+                text="आपका रिटर्न अनुरोध अप्रूव हो गया है। कृपया प्रोडक्ट वापस भेज दें। पता: [आपका पता यहाँ डालें]"
+            )
+            msg.reply_text(f"अप्रूवल सफल: ग्राहक {customer_id} को सूचित कर दिया गया।")
+        
+        elif text_upper.startswith("REJECT"):
+            customer_id = user_text.split()[-1]
+            client.send_message(
+                to=customer_id,
+                text="क्षमा करें, आपका रिटर्न अनुरोध अस्वीकार कर दिया गया है। कारण: [कारण यहाँ डालें]"
+            )
+            msg.reply_text(f"रिजेक्शन सफल: ग्राहक {customer_id} को सूचित कर दिया गया।")
 
 @wa.on_message(media)
 def handle_media_message(client: WhatsApp, msg: Message):
