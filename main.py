@@ -1,5 +1,6 @@
 import os
 from dotenv import load_dotenv
+from supabase import create_client, Client
 from fastapi import FastAPI
 from pywa import WhatsApp
 from pywa.types import Message
@@ -19,7 +20,12 @@ WHATSAPP_TOKEN = os.getenv("WHATSAPP_TOKEN")
 VERIFY_TOKEN = os.getenv("VERIFY_TOKEN")
 APP_ID = os.getenv("APP_ID")
 APP_SECRET = os.getenv("APP_SECRET")
-OWNER_WHATSAPP_NUMBER = os.getenv("OWNER_WHATSAPP_NUMBER")  # मालिक का WhatsApp नंबर (रिपोर्ट के लिए)
+#OWNER_WHATSAPP_NUMBER = os.getenv("OWNER_WHATSAPP_NUMBER")  # मालिक का WhatsApp नंबर (रिपोर्ट के लिए) 
+# Supabase से कनेक्ट करने के लिए क्लाइंट
+supabase: Client = create_client(
+    os.getenv("SUPABASE_URL"),
+    os.getenv("SUPABASE_KEY")
+)
 
 # चेक करें कि जरूरी चर मौजूद हैं
 required_vars = ["GEMINI_API_KEY", "WHATSAPP_PHONE_ID", "WHATSAPP_TOKEN", "VERIFY_TOKEN"]
@@ -86,50 +92,59 @@ def handle_text_message(client: WhatsApp, msg: Message):
 
     print(f"Received text from {user_wa_id}: {user_text}")
 
-    # Gemini से जवाब जनरेट करें (पहले से मौजूद)
+    # Gemini से जवाब जनरेट करें
     bot_response = get_gemini_reply(user_wa_id, user_text)
     msg.reply_text(bot_response)
 
     # रिपोर्ट भेजने की शर्त (ग्राहक की अंतिम पुष्टि पर)
     trigger_words = ["हाँ", "ओके", "ठीक है", "confirm", "ok", "yes", "भेज दो", "पक्का", "हां", "हा"]
     if any(word in user_text.lower() for word in trigger_words):
-        report = (
-            f"नया रिटर्न अनुरोध (अंतिम पुष्टि):\n"
-            f"ग्राहक नंबर: {user_wa_id}\n"
-            f"समस्या/जवाब: {user_text}\n"
-            f"सुझाव: जांच के बाद अप्रूव या रिजेक्ट करें\n"
-            f"अप्रूव करने के लिए: APPROVE {user_wa_id} लिखें\n"
-            f"रिजेक्ट करने के लिए: REJECT {user_wa_id} लिखें"
-        )
+        # Supabase से इस phone_id के मालिक का नंबर निकालें
+        store_data = supabase.table("stores").select("owner_whatsapp").eq("phone_id", WHATSAPP_PHONE_ID).execute()
 
-        if OWNER_WHATSAPP_NUMBER:
-            client.send_message(to=OWNER_WHATSAPP_NUMBER, text=report)
+        if store_data.data and len(store_data.data) > 0:
+            owner_number = store_data.data[0]["owner_whatsapp"]
+            report = (
+                f"नया रिटर्न अनुरोध (अंतिम पुष्टि):\n"
+                f"ग्राहक नंबर: {user_wa_id}\n"
+                f"समस्या/जवाब: {user_text}\n"
+                f"सुझाव: जांच के बाद अप्रूव या रिजेक्ट करें\n"
+                f"अप्रूव करने के लिए: APPROVE {user_wa_id} लिखें\n"
+                f"रिजेक्ट करने के लिए: REJECT {user_wa_id} लिखें"
+            )
+            client.send_message(to=owner_number, text=report)
             msg.reply_text("आपका अनुरोध स्टोर मालिक को भेज दिया गया है। जल्द अपडेट मिलेगा।")
         else:
-            print("OWNER_WHATSAPP_NUMBER environment variable नहीं मिला")
+            print("इस phone_id के लिए कोई स्टोर नहीं मिला।")
+            msg.reply_text("क्षमा करें, स्टोर जानकारी नहीं मिली। सपोर्ट से संपर्क करें।")
 
-    # मालिक से अप्रूवल/रिजेक्शन कमांड चेक (नया हिस्सा)
-    # केवल मालिक के मैसेज पर काम करेगा
-    if OWNER_WHATSAPP_NUMBER and user_wa_id == OWNER_WHATSAPP_NUMBER.replace("+91", ""):
-        text_upper = user_text.upper()
-        command_parts = text_upper.split()
-        if len(command_parts) >= 2:
-            command = command_parts[0]
-            target_user = command_parts[1]  # ग्राहक का नंबर
+    # मालिक से अप्रूवल/रिजेक्शन कमांड चेक (अब डेटाबेस से मैच करता है)
+    # पहले इस phone_id के owner_whatsapp निकालें
+    store_data = supabase.table("stores").select("owner_whatsapp").eq("phone_id", WHATSAPP_PHONE_ID).execute()
 
-            if command == "APPROVE":
-                client.send_message(
-                    to=target_user,
-                    text="आपका रिटर्न अनुरोध अप्रूव हो गया है। कृपया प्रोडक्ट वापस भेज दें। पता: [यहाँ स्टोर का रिटर्न पता डालें]"
-                )
-                msg.reply_text(f"अप्रूवल सफल: ग्राहक {target_user} को सूचित कर दिया गया।")
+    if store_data.data and len(store_data.data) > 0:
+        owner_number = store_data.data[0]["owner_whatsapp"]
+        # अब चेक करें कि मैसेज मालिक से आया है या नहीं
+        if user_wa_id == owner_number.replace("+91", ""):
+            text_upper = user_text.upper()
+            command_parts = text_upper.split()
+            if len(command_parts) >= 2:
+                command = command_parts[0]
+                target_user = command_parts[1]  # ग्राहक का नंबर
 
-            elif command == "REJECT":
-                client.send_message(
-                    to=target_user,
-                    text="क्षमा करें, आपका रिटर्न अनुरोध अस्वीकार कर दिया गया है। कारण: [यहाँ कारण डालें]"
-                )
-                msg.reply_text(f"रिजेक्शन सफल: ग्राहक {target_user} को सूचित कर दिया गया।")
+                if command == "APPROVE":
+                    client.send_message(
+                        to=target_user,
+                        text="आपका रिटर्न अनुरोध अप्रूव हो गया है। कृपया प्रोडक्ट वापस भेज दें। पता: [यहाँ स्टोर का रिटर्न पता डालें]"
+                    )
+                    msg.reply_text(f"अप्रूवल सफल: ग्राहक {target_user} को सूचित कर दिया गया।")
+
+                elif command == "REJECT":
+                    client.send_message(
+                        to=target_user,
+                        text="क्षमा करें, आपका रिटर्न अनुरोध अस्वीकार कर दिया गया है। कारण: [यहाँ कारण डालें]"
+                    )
+                    msg.reply_text(f"रिजेक्शन सफल: ग्राहक {target_user} को सूचित कर दिया गया।")
 
 @wa.on_message(media)
 def handle_media_message(client: WhatsApp, msg: Message):
