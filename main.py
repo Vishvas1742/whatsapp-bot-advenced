@@ -99,24 +99,39 @@ def handle_text_message(client: WhatsApp, msg: Message):
     # रिपोर्ट भेजने की शर्त (ग्राहक की अंतिम पुष्टि पर)
     trigger_words = ["हाँ", "ओके", "ठीक है", "confirm", "ok", "yes", "भेज दो", "पक्का", "हां", "हा"]
     if any(word in user_text.lower() for word in trigger_words):
-        # Supabase से इस phone_id के मालिक का नंबर निकालें
-        store_data = supabase.table("stores").select("owner_whatsapp").eq("phone_id", WHATSAPP_PHONE_ID).execute()
+        # Supabase से इस phone_id के मालिक का नंबर निकालें (trim + डिबग के साथ)
+        clean_phone_id = WHATSAPP_PHONE_ID.strip() if WHATSAPP_PHONE_ID else ""
+        print(f"डिबग: WHATSAPP_PHONE_ID मूल = '{WHATSAPP_PHONE_ID}' (लंबाई: {len(WHATSAPP_PHONE_ID)})")
+        print(f"डिबग: Cleaned phone_id = '{clean_phone_id}' (लंबाई: {len(clean_phone_id)})")
 
-        if store_data.data and len(store_data.data) > 0:
-            owner_number = store_data.data[0]["owner_whatsapp"]
-            report = (
-                f"नया रिटर्न अनुरोध (अंतिम पुष्टि):\n"
-                f"ग्राहक नंबर: {user_wa_id}\n"
-                f"समस्या/जवाब: {user_text}\n"
-                f"सुझाव: जांच के बाद अप्रूव या रिजेक्ट करें\n"
-                f"अप्रूव करने के लिए: APPROVE {user_wa_id} लिखें\n"
-                f"रिजेक्ट करने के लिए: REJECT {user_wa_id} लिखें"
-            )
-            client.send_message(to=owner_number, text=report)
-            msg.reply_text("आपका अनुरोध स्टोर मालिक को भेज दिया गया है। जल्द अपडेट मिलेगा।")
-        else:
-            print("इस phone_id के लिए कोई स्टोर नहीं मिला।")
-            msg.reply_text("क्षमा करें, स्टोर जानकारी नहीं मिली। सपोर्ट से संपर्क करें।")
+        try:
+            store_data = supabase.table("stores").select("owner_whatsapp").eq("phone_id", clean_phone_id).execute()
+            print(f"डिबग: Supabase रिजल्ट = {store_data.data}")
+
+            if store_data.data and len(store_data.data) > 0:
+                owner_number = store_data.data[0]["owner_whatsapp"].strip()
+                print(f"डिबग: owner_number मिला = '{owner_number}'")
+                report = (
+                    f"नया रिटर्न अनुरोध (अंतिम पुष्टि):\n"
+                    f"ग्राहक नंबर: {user_wa_id}\n"
+                    f"समस्या/जवाब: {user_text}\n"
+                    f"सुझाव: जांच के बाद अप्रूव या रिजेक्ट करें\n"
+                    f"अप्रूव करने के लिए: APPROVE {user_wa_id} लिखें\n"
+                    f"रिजेक्ट करने के लिए: REJECT {user_wa_id} लिखें"
+                )
+                try:
+                    client.send_message(to=owner_number, text=report)
+                    print(f"डिबग: रिपोर्ट भेजी गई {owner_number} पर")
+                    msg.reply_text("आपका अनुरोध स्टोर मालिक को भेज दिया गया है। जल्द अपडेट मिलेगा।")
+                except Exception as e:
+                    print(f"डिबग: send_message एरर = {str(e)}")
+                    msg.reply_text("अनुरोध दर्ज हो गया, लेकिन मालिक को सूचित करने में समस्या आई।")
+            else:
+                print("डिबग: कोई मैचिंग रो नहीं मिली")
+                msg.reply_text("क्षमा करें, स्टोर जानकारी नहीं मिली। सपोर्ट से संपर्क करें।")
+        except Exception as e:
+            print(f"डिबग: Supabase क्वेरी एरर = {str(e)}")
+            msg.reply_text("डेटाबेस से कनेक्ट करने में समस्या।")
 
     # मालिक से अप्रूवल/रिजेक्शन कमांड चेक (अब डेटाबेस से मैच करता है)
     # पहले इस phone_id के owner_whatsapp निकालें
