@@ -105,7 +105,7 @@ def handle_text_message(client: WhatsApp, msg: Message):
         print(f"डिबग: Cleaned phone_id = '{clean_phone_id}' (लंबाई: {len(clean_phone_id)})")
 
         try:
-            store_data = supabase.table("stores").select("owner_whatsapp").eq("phone_id", clean_phone_id).execute()
+            store_data = supabase.table("Stores").select("owner_whatsapp").eq("phone_id", clean_phone_id).execute()
             print(f"डिबग: Supabase रिजल्ट = {store_data.data}")
 
             if store_data.data and len(store_data.data) > 0:
@@ -135,7 +135,7 @@ def handle_text_message(client: WhatsApp, msg: Message):
 
     # मालिक से अप्रूवल/रिजेक्शन कमांड चेक (अब डेटाबेस से मैच करता है)
     # पहले इस phone_id के owner_whatsapp निकालें
-    store_data = supabase.table("stores").select("owner_whatsapp").eq("phone_id", WHATSAPP_PHONE_ID).execute()
+    store_data = supabase.table("Stores").select("owner_whatsapp").eq("phone_id", WHATSAPP_PHONE_ID).execute()
 
     if store_data.data and len(store_data.data) > 0:
         owner_number = store_data.data[0]["owner_whatsapp"]
